@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="计算巢是阿里云开放给企业应用服务商的服务管理平台。服务商能够在计算巢上发布私有化部署服务，为其客户提供云上软件一键部署的能力；同时也支持全托管模式的服务，赋能服务商托管其客户资源。">
+  <title>English - Aliyun 计算巢 x Songloft</title>
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  
+
+  
+
+  
+  
+
+  
+    <script src="../search/main.js"></script>
+  
+
+  
+
+  <script src="../js/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="nav-inner">
+        <div class="logo">
+          <img src="./img/logo-2x.png">
+        </div>
+        <div class="nav-list">
+          <ul>
+          
+              <li><a href="#deploying-songloft-on-alibaba-cloud-compute-nest">Deploying Songloft on Alibaba Cloud Compute Nest</a></li>
+              
+                  <li><a href="#about-the-service">About the service</a></li>
+                  
+              
+                  <li><a href="#billing">Billing</a></li>
+                  
+              
+                  <li><a href="#required-ram-permissions">Required RAM permissions</a></li>
+                  
+              
+                  <li><a href="#deployment-steps">Deployment steps</a></li>
+                  
+              
+                  <li><a href="#first-steps">First steps</a></li>
+                  
+                      <li class="li-h3"><a href="#upload-music-and-scan">Upload music and scan</a></li>
+                  
+                      <li class="li-h3"><a href="#data-persistence">Data persistence</a></li>
+                  
+                      <li class="li-h3"><a href="#change-the-admin-password">Change the admin password</a></li>
+                  
+                      <li class="li-h3"><a href="#runtime-telemetry-and-outbound-access">Runtime telemetry and outbound access</a></li>
+                  
+                      <li class="li-h3"><a href="#plugins-and-upgrades">Plugins and upgrades</a></li>
+                  
+              
+                  <li><a href="#parameters">Parameters</a></li>
+                  
+              
+                  <li><a href="#outputs">Outputs</a></li>
+                  
+              
+                  <li><a href="#security-notes">Security notes</a></li>
+                  
+              
+                  <li><a href="#troubleshooting">Troubleshooting</a></li>
+                  
+              
+                  <li><a href="#links">Links</a></li>
+                  
+              
+          
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="content theme-github">
+      
+      <div class="content-inner">        
+        
+        <h1 id="deploying-songloft-on-alibaba-cloud-compute-nest">Deploying Songloft on Alibaba Cloud Compute Nest</h1>
+<h2 id="about-the-service">About the service</h2>
+<p>Songloft is an open-source, self-hosted personal music server written in Go with a built-in SQLite database and no external database dependency. Point it at a folder of your own music files and it scans and indexes metadata and cover art, then serves the library through a web UI that phones, computers and TVs can connect to.</p>
+<p>This Compute Nest service deploys a single ECS instance. The image already contains Songloft and its Docker Compose runtime, and both the library database and the music files stay on the instance system disk.</p>
+<p>Note that this service ships no music content of any kind: the music directory is empty by default and you upload files you legally own. The upstream project states that it is intended for personal, non-commercial use, so confirm your scenario fits those terms before purchasing.</p>
+<p>Songloft is served on port 58091 of the instance public IP. The username is always <code>admin</code>; the password is generated during deployment and listed in the service instance outputs.</p>
+<h2 id="billing">Billing</h2>
+<p>Creating a service from this template is free. Running a service instance incurs:</p>
+<ul>
+<li>ECS instance (minimum 2 vCPU, 4 GiB memory)</li>
+<li>System disk (fixed at 200 GiB ESSD by the template)</li>
+<li>Public bandwidth (fixed at 5 Mbps by the template)</li>
+</ul>
+<p>Both pay-as-you-go and subscription are supported; the estimate is shown before you confirm the order.</p>
+<h2 id="required-ram-permissions">Required RAM permissions</h2>
+<p>If you create the instance with a RAM user, grant the following policies first.</p>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AliyunECSFullAccess</td>
+<td>Manage ECS instances</td>
+</tr>
+<tr>
+<td>AliyunVPCFullAccess</td>
+<td>Manage VPC resources</td>
+</tr>
+<tr>
+<td>AliyunROSFullAccess</td>
+<td>Manage Resource Orchestration Service stacks</td>
+</tr>
+<tr>
+<td>AliyunComputeNestUserFullAccess</td>
+<td>Manage Compute Nest user-side resources</td>
+</tr>
+</tbody>
+</table>
+<h2 id="deployment-steps">Deployment steps</h2>
+<ol>
+<li>Open the instance creation page, choose a region, and specify the instance type and instance password. You can create a new VPC or use an existing VPC and vSwitch.</li>
+</ol>
+<p><a href="https://computenest.console.aliyun.com/service/instance/create/cn-hangzhou?type=user&amp;ServiceId=service-020cdf9770534de0a7d8">Deploy now</a></p>
+<p><img alt="Create a service instance" src="../create-instance.png" /></p>
+<ol>
+<li>
+<p>Review the price estimate, choose <strong>Next: Confirm Order</strong>, accept the service agreement and click <strong>Create Now</strong>.</p>
+</li>
+<li>
+<p>Wait for the deployment to finish. The <strong>Outputs</strong> section of the instance details page lists <code>songloft_58091_url</code>, <code>AdminUsername</code> and <code>AdminPassword</code>, plus several notes on the music directory, telemetry and licensing that are worth reading.</p>
+</li>
+<li>
+<p>Open the URL from the outputs (<code>http://&lt;public-ip&gt;:58091</code>). The first sign-in asks you to accept the user agreement; then sign in as <code>admin</code> with the generated password to reach the home page.</p>
+</li>
+</ol>
+<h2 id="first-steps">First steps</h2>
+<h3 id="upload-music-and-scan">Upload music and scan</h3>
+<p>The music directory is <code>/opt/songloft/music</code> on the instance (<code>/app/music</code> inside the container, already configured, so you do not need to fill it in on the settings page). Upload files with SCP, SFTP or rsync, then click <strong>Scan local music</strong> under <strong>Settings → Music library</strong>. Cover art and metadata are extracted automatically. MP3, FLAC, WAV, APE, OGG and DSD are among the supported formats.</p>
+<p><img alt="Music library settings" src="../app.png" /></p>
+<h3 id="data-persistence">Data persistence</h3>
+<p>The database, configuration and cover cache live in <code>/opt/songloft/data</code>; music files live in <code>/opt/songloft/music</code>. <code>docker compose down</code> and container rebuilds keep the data; releasing the instance deletes both directories, so back them up regularly.</p>
+<h3 id="change-the-admin-password">Change the admin password</h3>
+<p>There is no password change screen. Edit <code>ADMIN_PASSWORD</code> in <code>/opt/songloft/.env</code> on the instance, then run <code>cd /opt/songloft &amp;&amp; docker compose up -d</code> to recreate the container.</p>
+<h3 id="runtime-telemetry-and-outbound-access">Runtime telemetry and outbound access</h3>
+<p>The official image injects Tracely runtime monitoring at build time. The upstream privacy notice says it reports the version, runtime platform, hostname and activity heartbeat, and there is no runtime switch to turn it off in the current release. To block it entirely, restrict the instance's outbound traffic with security groups or network ACLs.</p>
+<h3 id="plugins-and-upgrades">Plugins and upgrades</h3>
+<p>Capabilities such as the Subsonic-compatible API and WebDAV ship as official plugins rather than being bundled in the image; upload the corresponding plugin package on the plugin page to enable them. Licensing and content compliance for third-party plugins are the operator's responsibility. The admin UI offers a version check and an upgrade entry point for Docker deployments; back up the data directory first and make sure the instance can reach the upstream distribution source.</p>
+<h2 id="parameters">Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VpcOption</td>
+<td>Create a new VPC or reuse an existing one</td>
+<td>NewVPC</td>
+</tr>
+<tr>
+<td>VpcCidrBlock</td>
+<td>CIDR block of the new VPC</td>
+<td>192.168.0.0/16</td>
+</tr>
+<tr>
+<td>VSwitchCidrBlock</td>
+<td>CIDR block of the new vSwitch</td>
+<td>192.168.1.0/24</td>
+</tr>
+<tr>
+<td>EcsInstanceType</td>
+<td>ECS instance type, 2–4 vCPU ecs.u1 / ecs.e families</td>
+<td>none</td>
+</tr>
+<tr>
+<td>InstancePassword</td>
+<td>Password for the ECS instance</td>
+<td>none</td>
+</tr>
+<tr>
+<td>PayType</td>
+<td>Billing method</td>
+<td>PostPaid</td>
+</tr>
+<tr>
+<td>ZoneId</td>
+<td>Availability zone</td>
+<td>none</td>
+</tr>
+<tr>
+<td>VpcId / VSwitchId</td>
+<td>Existing VPC and vSwitch (when reusing a VPC)</td>
+<td>empty</td>
+</tr>
+</tbody>
+</table>
+<h2 id="outputs">Outputs</h2>
+<table>
+<thead>
+<tr>
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>songloft_58091_url</td>
+<td>Library URL (port 58091)</td>
+</tr>
+<tr>
+<td>AdminUsername</td>
+<td>Admin username (<code>admin</code>)</td>
+</tr>
+<tr>
+<td>AdminPassword</td>
+<td>Admin password (generated at deployment)</td>
+</tr>
+<tr>
+<td>QuickStartGuide / MusicDirNote / DataPersistenceNote / PasswordNote</td>
+<td>Sign-in, music directory, data persistence and password notes</td>
+</tr>
+<tr>
+<td>TelemetryNote / GplFfmpegNote / PluginNote / UpgradeNote / SourceLicenseNote</td>
+<td>Telemetry, ffmpeg licensing, plugins, upgrades and source licensing notes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="security-notes">Security notes</h2>
+<ul>
+<li>Do not share the admin password; if it leaks, change it as described above.</li>
+<li>You are responsible for the copyright and compliance of the music in the library. This service ships no music content.</li>
+<li>The main application is Apache-2.0 licensed; the bundled ffmpeg and ffprobe are built with GPL options, so redistributing the image must follow GPL terms.</li>
+<li>This service is built on the open-source Songloft project and has no affiliation with or endorsement from the upstream project or its authors.</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p><strong>The library is empty after sign-in.</strong> The music directory starts empty. Upload files to <code>/opt/songloft/music</code> and trigger a scan.</p>
+<p><strong>Newly uploaded tracks are not found.</strong> Make sure the files are under <code>/opt/songloft/music</code> and readable by the container, then run the scan again. If you changed the music directory, update it on the settings page before scanning.</p>
+<p><strong>Is data durable across restarts?</strong> Yes. Data and music live in <code>/opt/songloft/data</code> and <code>/opt/songloft/music</code>; only releasing the instance deletes them.</p>
+<h2 id="links">Links</h2>
+<ul>
+<li>Source code: https://github.com/songloft-org/songloft</li>
+<li>Website and documentation: https://songloft.hanxi.cc/</li>
+<li>License: Apache-2.0 (main application)</li>
+</ul>
+        
+      </div>
+
+      <div class="copyrights">© 2009-2022 Aliyun.com 版权所有</div>
+    </div>
+  </div>
+  
+  <!--
+  MkDocs version      : 1.6.1
+  Docs Build Date UTC : 2026-11-25 10:10:49.925129+00:00
+  -->
+</body>
+</html>

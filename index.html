@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="计算巢是阿里云开放给企业应用服务商的服务管理平台。服务商能够在计算巢上发布私有化部署服务，为其客户提供云上软件一键部署的能力；同时也支持全托管模式的服务，赋能服务商托管其客户资源。">
+  <title>中文 - Aliyun 计算巢 x Songloft</title>
+
+  <link rel="shortcut icon" href="img/favicon.ico">
+
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">
+  <link rel="stylesheet" href="css/theme.css">
+  
+
+  
+
+  
+  
+
+  
+    <script src="search/main.js"></script>
+  
+
+  
+
+  <script src="js/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="nav-inner">
+        <div class="logo">
+          <img src="./img/logo-2x.png">
+        </div>
+        <div class="nav-list">
+          <ul>
+          
+              <li><a href="#songloft">Songloft 计算巢部署文档</a></li>
+              
+                  <li><a href="#_1">服务说明</a></li>
+                  
+              
+                  <li><a href="#_2">计费说明</a></li>
+                  
+              
+                  <li><a href="#ram">RAM账号所需权限</a></li>
+                  
+              
+                  <li><a href="#_3">服务实例部署流程</a></li>
+                  
+                      <li class="li-h3"><a href="#_4">部署步骤</a></li>
+                  
+              
+                  <li><a href="#_5">首次使用说明</a></li>
+                  
+                      <li class="li-h3"><a href="#1">1. 上传音乐并扫描</a></li>
+                  
+                      <li class="li-h3"><a href="#2">2. 数据持久化</a></li>
+                  
+                      <li class="li-h3"><a href="#3">3. 修改管理员密码</a></li>
+                  
+                      <li class="li-h3"><a href="#4">4. 运行监控与出网</a></li>
+                  
+                      <li class="li-h3"><a href="#5">5. 插件与升级</a></li>
+                  
+              
+                  <li><a href="#_6">参数说明</a></li>
+                  
+              
+                  <li><a href="#_7">输出说明</a></li>
+                  
+              
+                  <li><a href="#_8">安全与使用说明</a></li>
+                  
+              
+                  <li><a href="#_9">常见问题</a></li>
+                  
+              
+                  <li><a href="#_10">官方链接</a></li>
+                  
+              
+          
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="content theme-github">
+      
+      <div class="content-inner">        
+        
+        <h1 id="songloft">Songloft 计算巢部署文档</h1>
+<h2 id="_1">服务说明</h2>
+<p>Songloft 是一款开源自托管的个人音乐服务器，使用 Go 编写、内置 SQLite，无外部数据库依赖。把自有音乐文件放进服务器的音乐目录，它会扫描并索引元数据与封面，生成一个通过网页访问的私人曲库；手机、电脑、电视等客户端连上同一台服务器即可播放。</p>
+<p>本计算巢服务采用单机 ECS 部署，ECS 镜像内已预置 Songloft 与 Docker Compose 运行环境，曲库数据与音乐文件都保存在实例系统盘，不经过任何第三方存储服务。</p>
+<p>需要注意：本服务不提供任何音乐内容，音乐目录出厂为空，需要自行上传合法拥有的音乐文件；上游文档声明适用于个人非商业使用，购买前请确认使用场景符合上游授权条款。</p>
+<p>访问入口为实例公网 IP 的 58091 端口，用户名固定为 <code>admin</code>，密码在部署时随机生成并展示在实例输出中。</p>
+<h2 id="_2">计费说明</h2>
+<p>通过此服务模板构建服务不产生费用。用户部署服务实例时，资源费用主要涉及：</p>
+<ul>
+<li>ECS 实例规格（最低 2 vCPU、4 GiB 内存）</li>
+<li>系统盘容量（模板固定 200 GiB ESSD）</li>
+<li>公网带宽（模板固定 5 Mbps）</li>
+</ul>
+<p>计费方式支持按量付费和包年包月，预估费用会在部署前实时展示。</p>
+<h2 id="ram">RAM账号所需权限</h2>
+<p>若使用 RAM 用户创建服务实例，需要在创建服务实例前为该 RAM 用户添加相应权限。</p>
+<table>
+<thead>
+<tr>
+<th>权限策略名称</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AliyunECSFullAccess</td>
+<td>管理云服务器 ECS 的权限</td>
+</tr>
+<tr>
+<td>AliyunVPCFullAccess</td>
+<td>管理专有网络 VPC 的权限</td>
+</tr>
+<tr>
+<td>AliyunROSFullAccess</td>
+<td>管理资源编排 ROS 的权限</td>
+</tr>
+<tr>
+<td>AliyunComputeNestUserFullAccess</td>
+<td>管理计算巢服务用户侧资源的权限</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">服务实例部署流程</h2>
+<h3 id="_4">部署步骤</h3>
+<ol>
+<li>打开计算巢服务实例创建页面，选择部署地域，填写实例规格、实例密码。网络可选择新建 VPC，也可以选择已有的 VPC 与交换机。</li>
+</ol>
+<p><a href="https://computenest.console.aliyun.com/service/instance/create/cn-hangzhou?type=user&amp;ServiceId=service-020cdf9770534de0a7d8">部署链接</a></p>
+<p><img alt="创建服务实例" src="create-instance.png" /></p>
+<ol>
+<li>
+<p>确认询价明细后点击 <strong>下一步：确认订单</strong>，同意服务协议并点击 <strong>立即创建</strong>。</p>
+</li>
+<li>
+<p>等待服务实例部署完成。部署完成后，在服务实例详情页的 <strong>输出</strong> 区域查看 <code>songloft_58091_url</code> 访问地址、<code>AdminUsername</code> 用户名与 <code>AdminPassword</code> 管理员密码；输出中还有若干条使用说明（音乐目录、遥测、许可等），建议一并阅读。</p>
+</li>
+<li>
+<p>用浏览器打开输出中的访问地址（<code>http://&lt;实例公网IP&gt;:58091</code>），首次登录会要求勾选用户协议；使用用户名 <code>admin</code> 与输出中的管理员密码登录，即可进入首页。</p>
+</li>
+</ol>
+<h2 id="_5">首次使用说明</h2>
+<h3 id="1">1. 上传音乐并扫描</h3>
+<p>音乐目录为实例上的 <code>/opt/songloft/music</code>（容器内对应 <code>/app/music</code>，已预置在配置中，无需在设置页手工填写）。通过 SCP、SFTP 或 rsync 把音乐文件上传到该目录，然后在 <strong>设置 → 音乐库管理</strong> 点击 <strong>扫描本地音乐</strong>，封面与元数据会被自动提取入库。扫描支持 MP3、FLAC、WAV、APE、OGG、DSD 等常见格式。</p>
+<p><img alt="音乐库管理" src="app.png" /></p>
+<h3 id="2">2. 数据持久化</h3>
+<p>数据库、配置与封面缓存保存在 <code>/opt/songloft/data</code>，音乐文件在 <code>/opt/songloft/music</code>。执行 <code>docker compose down</code> 或重建容器不会丢数据；释放服务实例时两个目录会一并删除，请定期备份。</p>
+<h3 id="3">3. 修改管理员密码</h3>
+<p>系统未提供界面改密入口。如需更换密码，登录实例编辑 <code>/opt/songloft/.env</code> 中的 <code>ADMIN_PASSWORD</code>，然后执行 <code>cd /opt/songloft &amp;&amp; docker compose up -d</code> 重建容器生效。</p>
+<h3 id="4">4. 运行监控与出网</h3>
+<p>官方镜像在编译期注入了 Tracely 运行监控，上游隐私说明称会上报版本、运行平台、主机名与活跃心跳，当前版本没有运行期关闭开关。如需彻底阻断，请通过安全组或网络 ACL 限制实例的出方向访问。</p>
+<h3 id="5">5. 插件与升级</h3>
+<p>Subsonic 兼容接口、WebDAV 等能力以官方插件形式提供，未预置在镜像内，可在插件管理页上传对应插件包后启用；第三方插件的授权与内容合规由使用者自负。管理界面提供版本检查与 Docker 环境下的升级入口，升级前请先备份数据目录，并确认实例可访问上游分发源。</p>
+<h2 id="_6">参数说明</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VpcOption</td>
+<td>网络类型，新建 VPC 或使用已有 VPC</td>
+<td>NewVPC</td>
+</tr>
+<tr>
+<td>VpcCidrBlock</td>
+<td>新建 VPC 的网段</td>
+<td>192.168.0.0/16</td>
+</tr>
+<tr>
+<td>VSwitchCidrBlock</td>
+<td>新建交换机的网段</td>
+<td>192.168.1.0/24</td>
+</tr>
+<tr>
+<td>EcsInstanceType</td>
+<td>ECS 实例规格，可选 2–4 vCPU 的 ecs.u1 / ecs.e 系列</td>
+<td>无</td>
+</tr>
+<tr>
+<td>InstancePassword</td>
+<td>实例登录密码</td>
+<td>无</td>
+</tr>
+<tr>
+<td>PayType</td>
+<td>付费类型</td>
+<td>PostPaid</td>
+</tr>
+<tr>
+<td>ZoneId</td>
+<td>可用区</td>
+<td>无</td>
+</tr>
+<tr>
+<td>VpcId / VSwitchId</td>
+<td>已有 VPC 与交换机 ID（选择已有 VPC 时填写）</td>
+<td>空</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_7">输出说明</h2>
+<table>
+<thead>
+<tr>
+<th>输出</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>songloft_58091_url</td>
+<td>曲库访问地址（端口 58091）</td>
+</tr>
+<tr>
+<td>AdminUsername</td>
+<td>管理员用户名（admin）</td>
+</tr>
+<tr>
+<td>AdminPassword</td>
+<td>管理员密码（部署时随机生成）</td>
+</tr>
+<tr>
+<td>QuickStartGuide / MusicDirNote / DataPersistenceNote / PasswordNote</td>
+<td>登录、音乐目录、数据持久化与改密说明</td>
+</tr>
+<tr>
+<td>TelemetryNote / GplFfmpegNote / PluginNote / UpgradeNote / SourceLicenseNote</td>
+<td>遥测出网、ffmpeg 许可、插件、升级与来源授权说明</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_8">安全与使用说明</h2>
+<ul>
+<li>请勿公开分享管理员密码；密码泄露后按上文方式在实例内更换。</li>
+<li>曲库版权与合规由使用者自行负责，本服务不提供任何音乐内容。</li>
+<li>主程序为 Apache-2.0 许可；镜像内 ffmpeg 与 ffprobe 以 GPL 选项构建，随镜像分发需遵循 GPL 要求。</li>
+<li>本服务基于开源项目 Songloft 构建，与上游项目及作者无隶属或背书关系。</li>
+</ul>
+<h2 id="_9">常见问题</h2>
+<p><strong>登录后曲库是空的？</strong>
+音乐目录出厂为空。先把文件上传到 <code>/opt/songloft/music</code>，再到设置页触发扫描。</p>
+<p><strong>扫描不到新上传的歌曲？</strong>
+确认文件放在 <code>/opt/songloft/music</code> 下且容器对该目录有读权限，然后重新触发扫描；修改过音乐目录的，需要在设置页更新目录后再扫描。</p>
+<p><strong>重启实例后数据还在吗？</strong>
+在。数据与音乐分别在 <code>/opt/songloft/data</code> 与 <code>/opt/songloft/music</code>；只有释放服务实例才会删除。</p>
+<h2 id="_10">官方链接</h2>
+<ul>
+<li>官方仓库：https://github.com/songloft-org/songloft</li>
+<li>官方网站与文档：https://songloft.hanxi.cc/</li>
+<li>许可证：Apache-2.0（主程序）</li>
+</ul>
+        
+      </div>
+
+      <div class="copyrights">© 2009-2022 Aliyun.com 版权所有</div>
+    </div>
+  </div>
+  
+  <!--
+  MkDocs version      : 1.6.1
+  Docs Build Date UTC : 2026-11-25 10:10:49.908513+00:00
+  -->
+</body>
+</html>
